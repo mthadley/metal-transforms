@@ -1,0 +1,27 @@
+{
+  "name": "metal-transforms",
+  "version": "1.0.0",
+  "description": "Transforms for use with metal and jscodeshift",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mthadley/metal-transforms.git"
+  },
+  "keywords": [
+    "metal",
+    "jscodeshift"
+  ],
+  "author": "Michael Hadley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mthadley/metal-transforms/issues"
+  },
+  "homepage": "https://github.com/mthadley/metal-transforms#readme",
+  "devDependencies": {
+    "jest": "^23.2.0",
+    "jscodeshift": "^0.5.1"
+  }
+}
