@@ -25,48 +25,41 @@ function isStateProperty(name) {
 
 module.exports = (file, api) => {
   const j = api.jscodeshift;
-
   const root = j(file.source);
+  const addedCounts = new Map();
 
-  const classMap = new Map();
-
-  const removedConfigs = root
+  root
     .find(j.MemberExpression)
-    .filter(path => isStateProperty(path.value.property.name))
+    .filter(path => isStateProperty(path.node.property.name))
     .forEach(path => {
-      const {value} = path.parent;
-      const className = value.left.object.name;
+      const {node} = path.parent;
+      const className = node.left.object.name;
+      const propName = node.left.property.name;
+      const configNode = node.right
 
-      const props = classMap.get(className) || [];
+      j(path)
+        .closestScope()
+        .find(j.ClassDeclaration)
+        .filter(({node}) => node.id.name === className)
+        .forEach(({node}) => {
+          const body = node.body.body;
 
-      props.push({
-        configNode: value.right,
-        name: value.left.property.name
-      });
+          const count = addedCounts.get(className) || 0;
 
-      classMap.set(className, props);
+          body.splice(count, null,
+            j.classProperty(
+              j.identifier(propName), /* key */
+              configNode,             /* value expression */
+              null,                   /* type annotation */
+              true                    /* static */
+            )
+          );
+
+          addedCounts.set(className, count + 1);
+        });
     })
     .map(path => path.parent)
     .remove();
 
-  return root
-    .find(j.ClassDeclaration)
-    .filter(({value}) => classMap.has(value.id.name))
-    .forEach(({value}) => {
-      const props = classMap.get(value.id.name).concat().reverse();
-
-      for (const {name, configNode} of props) {
-        const body = value.body.body;
-
-        body.unshift(
-          j.classProperty(
-            j.identifier(name), /* key */
-            configNode,         /* value expression */
-            null,               /* type annotation */
-            true                /* static */
-          )
-        );
-      }
-    })
-    .toSource();
+  return root.toSource();
 }
